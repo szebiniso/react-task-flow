@@ -138,6 +138,7 @@ const TaskList = () => {
         ? { 
             ...task, 
             status: task.status === 'complete' ? 'incomplete' : 'complete',
+            progress: task.status === 'complete' ? '0' : '100',
             updatedAt: new Date().toISOString()
           } 
         : task

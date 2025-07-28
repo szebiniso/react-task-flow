@@ -9,6 +9,7 @@ import UserSidebar from "./UserSidebar";
 import Column from "./Column";
 import SortableItem from "./SortableItem";
 import notificationSound from "./notification.mp3";
+import {useSearchParams} from "react-router-dom";
 
 const UserDashboard = () => {
   const [tasks, setTasks] = useState({
@@ -18,7 +19,10 @@ const UserDashboard = () => {
   });
 
   const [notes, setNotes] = useState(localStorage.getItem("notes") || "");
+  const [searchParams, setSearchParams] = useSearchParams();
   const audioRef = useRef(new Audio(notificationSound));
+  const filterParam = searchParams.get("filter") || "all";
+
 
   // 🔹 Ensure page starts from top when component loads
   useEffect(() => {
@@ -26,7 +30,44 @@ const UserDashboard = () => {
   }, []);
 
   useEffect(() => {
-    const storedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    const handleStorageChange = (e) => {
+      if (e.key === 'tasks') {
+        try {
+          let updatedTasks = JSON.parse(e.newValue || '[]');
+          if(filterParam === "to do") {
+            updatedTasks = updatedTasks.filter(task => task.status === 'incomplete')
+          }
+          if(filterParam === "completed") {
+            updatedTasks = updatedTasks.filter(task => task.status === 'complete')
+          }
+          const categorizedTasks = {
+            "To Do": updatedTasks.filter((task) => task.progress <= 40),
+            "In Progress": updatedTasks.filter((task) => task.progress > 40 && task.progress <= 80),
+            Completed: updatedTasks.filter((task) => task.progress > 80),
+          };
+          setTasks(categorizedTasks);
+          checkDeadlines(updatedTasks);
+        } catch (err) {
+          console.error('Error parsing tasks from storage:', err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    let storedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    if(filterParam === "to do") {
+      storedTasks = storedTasks.filter(task => task.status === 'incomplete')
+    }
+    if(filterParam === "completed") {
+      storedTasks = storedTasks.filter(task => task.status === 'complete')
+    }
     const categorizedTasks = {
       "To Do": storedTasks.filter((task) => task.progress <= 40),
       "In Progress": storedTasks.filter((task) => task.progress > 40 && task.progress <= 80),
@@ -34,7 +75,7 @@ const UserDashboard = () => {
     };
     setTasks(categorizedTasks);
     checkDeadlines(storedTasks);
-  }, []);
+  }, [filterParam]);
 
   useEffect(() => {
     localStorage.setItem("notes", notes);
@@ -109,20 +150,38 @@ const UserDashboard = () => {
       <UserSidebar />
 
       <div className="flex-1 p-6">
-        <h2 className="text-4xl font-bold text-gray-900 mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+        <h2
+          className="text-4xl font-bold text-gray-900 mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
           🚀 User Dashboard
         </h2>
-        <ToastContainer position="top-right" autoClose={5000} hideProgressBar />
+        <ToastContainer position="top-right" autoClose={5000} hideProgressBar/>
+
+        {/* Filter */}
+
+        <div className="w-1/3 mb-4">
+          <label className="block text-sm font-medium text-gray-700">Filter tasks by</label>
+          <select
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            value={filterParam}
+            onChange={(e) => setSearchParams({ filter: e.target.value })}
+          >
+            <option value="all">All</option>
+            <option value="to do">To do</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
 
         {/* Kanban Board */}
-        <div className="glassmorphism p-4 rounded-xl shadow-lg bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-lg border border-white/20">
+        <div
+          className="glassmorphism p-4 rounded-xl shadow-lg bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-lg border border-white/20">
           <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.keys(tasks).map((columnKey) => (
                 <Column key={columnKey} title={columnKey} id={columnKey} className="w-[280px]">
-                  <SortableContext items={tasks[columnKey].map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                  <SortableContext items={tasks[columnKey].map((task) => task.id)}
+                                   strategy={verticalListSortingStrategy}>
                     {tasks[columnKey].map((task) => (
-                      <SortableItem key={task.id} id={task.id} task={task} />
+                      <SortableItem key={task.id} id={task.id} task={task}/>
                     ))}
                   </SortableContext>
                 </Column>
@@ -138,11 +197,12 @@ const UserDashboard = () => {
             <h2 className="text-3xl font-extrabold text-gray-900 mb-4 text-center tracking-wide uppercase">
               📊 Task Analytics
             </h2>
-            <Bar data={chartData} />
+            <Bar data={chartData}/>
           </div>
 
           {/* Notes */}
-          <div className="p-6 w-full lg:w-[590px] bg-green-900 text-white rounded-xl border-[12px] border-[#8B4501] shadow-lg flex flex-col">
+          <div
+            className="p-6 w-full lg:w-[590px] bg-green-900 text-white rounded-xl border-[12px] border-[#8B4501] shadow-lg flex flex-col">
             <h2 className="text-2xl font-bold text-yellow-400 mb-2 text-center">📌 Notes</h2>
 
             {/* Notes Input Field - Enlarged to match Task Analytics */}
