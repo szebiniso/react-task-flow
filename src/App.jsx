@@ -136,6 +136,14 @@ function App() {
                     </ProtectedRoute>
                   } 
                 />
+                <Route
+                  path="/admin/users-log"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <UserLogPage />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route 
                   path="/admin/manage-users" 
                   element={

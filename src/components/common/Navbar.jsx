@@ -70,14 +70,15 @@ const Navbar = () => {
 
     setTimeout(() => {
       const path = location.pathname;
-      const isAdmin = path.startsWith("/admin");
+      const userRole = localStorage.getItem("userRole");
 
-      if (!isAuthenticated) navigate("/user/dashboard");;
+
+      if (!isAuthenticated) navigate("/user/dashboard");
 
       if (path.startsWith("/admin") || path.startsWith("/user")) {
         navigate("/");
       } else if (path === "/") {
-        if (isAdmin) {
+        if (userRole === "admin") {
           navigate("/admin/dashboard");
         } else {
           navigate("/user/dashboard");
