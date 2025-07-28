@@ -9,6 +9,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const hideProfileRoutes = ["/", "/login", "/signup"];
+  const { user } = useAuth();
+  const isAuthenticated = !!user || !!localStorage.getItem("token");
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [taskListOpen, setTaskListOpen] = useState(false);
@@ -57,7 +59,7 @@ const Navbar = () => {
       // Remove the correct profile from storage
       localStorage.removeItem(isAdminPortal ? "adminProfile" : "userProfile");
 
-      navigate("/");
+      navigate("/login");
     } catch (err) {
       console.error("Logout failed:", err);
     }
@@ -67,19 +69,18 @@ const Navbar = () => {
     e.preventDefault();
 
     setTimeout(() => {
-      const isAdminPortal = location.pathname.startsWith("/admin");
+      const path = location.pathname;
+      const isAdmin = path.startsWith("/admin");
 
-      if (isAdminPortal) {
-        if (location.pathname === "/admin/dashboard") {
-          window.location.reload(); // Refresh if already on admin dashboard
+      if (!isAuthenticated) navigate("/user/dashboard");;
+
+      if (path.startsWith("/admin") || path.startsWith("/user")) {
+        navigate("/");
+      } else if (path === "/") {
+        if (isAdmin) {
+          navigate("/admin/dashboard");
         } else {
-          navigate("/admin/dashboard"); // Redirect to admin dashboard
-        }
-      } else {
-        if (location.pathname === "/user/dashboard") {
-          window.location.reload(); // Refresh if already on user dashboard
-        } else {
-          navigate("/user/dashboard"); // Redirect to user dashboard
+          navigate("/user/dashboard");
         }
       }
     }, 500);
@@ -120,7 +121,16 @@ const Navbar = () => {
         )}
 
         {/* Profile Button (Hidden on Landing/Login/Signup) */}
-        {!hideProfileRoutes.includes(location.pathname) && (
+
+        {!isAuthenticated && !hideProfileRoutes.includes(location.pathname) && <button
+          onClick={() => navigate("/login")}
+          className="flex items-center bg-white text-blue-600 font-medium px-4 py-2 rounded-lg shadow-md
+                         hover:bg-blue-700 hover:text-white transition-all focus:outline-none"
+        >
+          Login
+        </button>}
+
+        {!hideProfileRoutes.includes(location.pathname) && isAuthenticated && (
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}

@@ -44,8 +44,7 @@ const Login = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      const userRole = localStorage.getItem("userRole");
-      navigate(userRole === "admin" ? "/admin/dashboard" : "/user/dashboard");
+      navigate("/");
     }
   }, [navigate]);
 

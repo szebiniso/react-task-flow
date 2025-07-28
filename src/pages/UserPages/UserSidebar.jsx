@@ -1,17 +1,21 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaChartBar, FaTasks, FaCalendarAlt, FaBell, FaUser } from "react-icons/fa";
+import {useAuth} from "../../contexts/AuthContext.jsx";
 
 const UserSidebar = () => {
   const location = useLocation();
 
+  const { user } = useAuth();
+  const isAuthenticated = !!user || !!localStorage.getItem("token");
+
   // Sidebar links with icons
   const menuItems = [
-    { path: "/user/dashboard", label: "Dashboard", icon: <FaChartBar /> },
-    { path: "/user/userpage", label: "Create Tasks", icon: <FaTasks /> },
-    { path: "/user/calendar", label: "Calendar", icon: <FaCalendarAlt /> },
-    { path: "/user/notifications", label: "Notifications", icon: <FaBell /> },
-    { path: "/user/profile", label: "Profile", icon: <FaUser /> },
+    { path: "/user/dashboard", label: "Dashboard", icon: <FaChartBar />, isPublic: true },
+    { path: "/user/userpage", label: "Create Tasks", icon: <FaTasks />, isPublic: isAuthenticated },
+    { path: "/user/calendar", label: "Calendar", icon: <FaCalendarAlt />, isPublic: isAuthenticated },
+    { path: "/user/notifications", label: "Notifications", icon: <FaBell />, isPublic: isAuthenticated },
+    { path: "/user/profile", label: "Profile", icon: <FaUser />, isPublic: isAuthenticated },
   ];
 
   return (
@@ -19,8 +23,7 @@ const UserSidebar = () => {
       <h2 className="text-2xl font-extrabold text-center text-gray-100 tracking-wide mb-6">🚀 User Panel</h2>
 
       <ul className="space-y-3">
-        {menuItems.map(({ path, label, icon }) => (
-          <li key={path}>
+        {menuItems.map(({ path, label, icon, isPublic }) => isPublic && <li key={path}>
             <Link
               to={path}
               className={`flex items-center gap-3 py-3 px-5 rounded-lg transition-all duration-200 text-lg font-medium ${
@@ -33,7 +36,7 @@ const UserSidebar = () => {
               {label}
             </Link>
           </li>
-        ))}
+        )}
       </ul>
     </div>
   );

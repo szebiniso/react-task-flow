@@ -71,12 +71,12 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   // If role is required, check if user has the role
   if (requiredRole) {
     const hasRequiredRole = hasRole(requiredRole);
-    
+
     if (!hasRequiredRole) {
       // Redirect to appropriate dashboard based on user's role
       const userRole = localStorage.getItem("userRole");
       const redirectPath = userRole === "admin" ? "/admin/dashboard" : "/user/dashboard";
-      
+
       return <Navigate to={redirectPath} replace />;
     }
   }
@@ -91,6 +91,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
  * Defines the application's routing structure and wraps the app with necessary providers.
  */
 function App() {
+
   return (
     <AuthProvider>
       <NotificationProvider>
@@ -101,11 +102,22 @@ function App() {
             <main className="flex-grow">
               <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/user/dashboard" element={<UserDashboard />} />
+
+                {/* Protected General Route */}
+
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Landing />
+                    </ProtectedRoute>
+                  }
+                />
                 
                 {/* Protected Admin Routes */}
                 <Route 
@@ -166,14 +178,6 @@ function App() {
                 />
                 
                 {/* Protected User Routes */}
-                <Route 
-                  path="/user/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <UserDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
                 <Route 
                   path="/user/userpage" 
                   element={
